@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Voice Quiz Game</title>
+        <link rel="stylesheet" type="" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.17.2/dist/sweetalert2.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f7f9fc;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+
+    h3 {
+      font-size: 2.5em;
+      color: #34495e;
+      margin: 20px 0;
+      text-align: center;
+    }
+
+    /* Navigation Tabs */
+    .tabs {
+      display: flex;
+      justify-content: center;
+      background-color: #2c3e50;
+      padding: 10px;
+    }
+
+    .tab {
+      margin: 0 15px;
+      padding: 10px 20px;
+      font-size: 1.1em;
+      color: white;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: background-color 0.3s;
+    }
+
+    .tab:hover {
+      background-color: #34495e;
+    }
+
+    .active-tab {
+      background-color: #3498db;
+      border-bottom: 3px solid #2980b9;
+    }
+
+    .content {
+      padding: 30px;
+    }
+
+    /* Question Content Styling */
+    #question {
+      font-size: 1.4em;
+      margin: 20px 0;
+    }
+
+    #spokenText {
+      font-size: 1.1em;
+      margin: 15px 0;
+      color: #333;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      font-size: 1em;
+      border: none;
+      border-radius: 8px;
+      margin: 8px;
+      cursor: pointer;
+    }
+
+    #speakBtn {
+      background-color: #3498db;
+      color: white;
+    }
+
+    #checkBtn {
+      background-color: #27ae60;
+      color: white;
+    }
+
+    #nextBtn {
+      background-color: #f39c12;
+      color: white;
+    }
+
+    #result {
+      font-size: 1.3em;
+      margin-top: 20px;
+      font-weight: bold;
+    }
+
+    #correctionBox {
+      display: none;
+      margin: 10px 0;
+    }
+
+    #correctionInput {
+      font-size: 1.1em;
+      padding: 8px;
+      width: 50%;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    /* Hide unused tabs' content */
+    .tab-content {
+      display: none;
+    }
+
+    
+    /* Question Upload Section Styles */
+    #uploadSection {
+      margin-top: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      gap: 20px;
+    }
+
+    .upload-card {
+      background-color: #ecf0f1;
+      padding: 20px;
+      border-radius: 8px;
+      width: 250px;
+      text-align: center;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .upload-card:hover {
+      background-color: #bdc3c7;
+    }
+
+    .upload-card i {
+      font-size: 2em;
+      margin-bottom: 10px;
+      color: #2980b9;
+    }
+
+    .upload-card p {
+      font-size: 1.1em;
+    }
+
+    /* Uploaded Questions List */
+    #uploadedQuestionsList {
+      margin-top: 20px;
+    }
+
+    .question-item {
+      margin-bottom: 10px;
+    }
+
+    .question-item input {
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h3>🎤 Voice Quiz Game</h3>
+
+  <!-- Navigation Tabs -->
+  <div class="tabs">
+    <div class="tab active-tab" onclick="showTab('practice')">Practice</div>
+    <div class="tab" onclick="showTab('upload')">Upload Questions</div>
+    <div class="tab" onclick="showTab('custom')">Custom</div>
+  </div>
+
+  <!-- Content Areas -->
+  <div class="content">
+    <!-- Practice Tab -->
+    <div id="practice" class="tab-content">
+      <div id="question">Loading question...</div>
+
+      <button id="speakBtn" class="btn">🎙️ Speak</button>
+            <button id="repeatBtn" class="btn">🔁 Repeat Question</button>
+      <button id="checkBtn" class="btn">✅ Check Answer</button>
+      <button id="nextBtn" class="btn" style="display: none;">🔄 Next Question</button>
+
+      <div id="spokenText"></div>
+      <div id="result"></div>
+
+      <div id="correctionBox">
+        <label for="correctionInput">If there was an issue, correct it below:</label>
+        <input type="text" id="correctionInput" placeholder="Type your answer here">
+      </div>
+    </div>
+
+ <div id="upload" class="tab-content">
+  <h2>Upload or Create Questions</h2>
+
+  <!-- Question Options -->
+  <div id="uploadSection">
+    <div class="upload-card" onclick="showOption('manual')">
+      <i class="fas fa-pencil-alt"></i>
+      <p>Create Question Manually</p>
+    </div>
+    <div class="upload-card" onclick="showOption('excel')">
+      <i class="fa fa-file-excel"></i>
+      <p>Upload Questions from Excel</p>
+    </div>
+    <div class="upload-card" onclick="showOption('questions')">
+      <i class="fa fa-list"></i>
+            <p>Your questions</p>
+
+    </div>
+  
+  
+  </div>
+
+  <!-- Form to Add Questions Manually -->
+  <div id="manualOption" style="display: none;">
+    <h3>Create a Question</h3>
+    <form id="uploadQuestionsForm">
+      <input type="text" id="newQuestion" placeholder="Enter your question" required>
+      <input type="text" id="newAnswer" placeholder="Enter the correct answer" required>
+      <button type="button" class="btn" onclick="addManualQuestion()">Add Question</button>
+    </form>
+  </div>
+
+  <!-- Upload Questions from Excel -->
+  <div id="excelOption" style="display: none;">
+    <h3>Upload Questions from Excel</h3>
+    <input type="file" id="uploadFile" accept=".xlsx, .xls" onchange="uploadExcelFile()">
+    <p>Upload an Excel file with questions in the first column and answers in the second column.</p>
+  </div>
+
+<div id="myQuestions" style="display: none;">
+    <h3>Your questions</h3>
+  <div id="uploadedQuestionsList">
+    <!-- Dynamically populated question list with disable options -->
+  </div>
+</div>
+
+
+</div>
+
+
+
+  <script>
+    // Tab switching functionality
+    function showTab(tabName) {
+      // Hide all content
+      const allTabs = document.querySelectorAll('.tab-content');
+      allTabs.forEach(tab => tab.style.display = 'none');
+      
+      // Remove active-tab class from all tabs
+      const allTabLinks = document.querySelectorAll('.tab');
+      allTabLinks.forEach(tab => tab.classList.remove('active-tab'));
+
+      // Show the selected tab and add active-tab class
+      document.getElementById(tabName).style.display = 'block';
+      document.querySelector(`.tab[onclick="showTab('${tabName}')"]`).classList.add('active-tab');
+    }
+
+    // Initial display of Practice tab
+    showTab('practice');
+
+    const questions = [
+           {
+  question: "What day is today?",
+  answer: (() => {
+    const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+    const today = new Date();
+    return days[today.getDay()];
+  })() // <-- Ejecuta la función inmediatamente y guarda el string
+}    ];
+
+    let current = {};
+    let spoken = "";
+
+    const questionEl = document.getElementById("question");
+    const spokenTextEl = document.getElementById("spokenText");
+    const resultEl = document.getElementById("result");
+    const speakBtn = document.getElementById("speakBtn");
+    const checkBtn = document.getElementById("checkBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const correctionBox = document.getElementById("correctionBox");
+    const correctionInput = document.getElementById("correctionInput");
+        const repeatBtn = document.getElementById("repeatBtn");
+
+let recognizing = false;
+
+    const synth = window.speechSynthesis;
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+recognition.onstart = function () {
+    recognizing = true;
+};
+
+recognition.onend = function () {
+    recognizing = false;
+};
+
+    function speak(text) {
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = "en-US";
+      synth.speak(utter);
+    }
+
+    function loadQuestion() {
+      resultEl.textContent = "";
+      spokenTextEl.textContent = "";
+      correctionBox.style.display = "none";
+      correctionInput.value = "";
+      nextBtn.style.display = "none";
+
+      current = questions[Math.floor(Math.random() * questions.length)];
+      questionEl.textContent = "Question: " + current.question;
+      speak(current.question);
+    }
+
+    speakBtn.addEventListener("click", () => {
+ if (!recognizing) {
+        recognition.start(); // Solo inicia si no está corriendo
+    } else {
+        console.log("Ya está reconociendo.");
+    }      spokenTextEl.textContent = "🎧 Listening...";
+
+      recognition.onresult = (event) => {
+        spoken = event.results[0][0].transcript.toLowerCase();
+        spokenTextEl.textContent = "You said: \"" + spoken + "\"";
+        
+        // Pre-fill the correction box with the spoken text for easy editing
+        correctionBox.style.display = "block";
+        correctionInput.value = spoken;
+      };
+
+      recognition.onerror = (event) => {
+        spokenTextEl.textContent = "❌ Error: " + event.error;
+      };
+    });
+
+   repeatBtn.addEventListener("click", () => {
+      if (current.question) {
+        speak(current.question);
+      }
+    });
+
+    checkBtn.addEventListener("click", () => {
+      if (!spoken && !correctionInput.value) {
+        resultEl.textContent = "❗ Please speak your answer first.";
+        return;
+      }
+
+      // Use the correction input if it's provided
+      const finalAnswer = correctionInput.value.trim() || spoken;
+
+      if (finalAnswer.includes(current.answer.toLowerCase())) {
+        resultEl.textContent = "✅ Correct!";
+        speak("That's correct!");
+      } else {
+        resultEl.textContent = "❌ Incorrect. The answer is: " + current.answer;
+        speak("Sorry, the correct answer is " + current.answer);
+      }
+
+      speakBtn.style.display = "none";
+      checkBtn.style.display = "none";
+      repeatBtn.style.display = "none";
+      nextBtn.style.display = "inline-block";
+    });
+
+    nextBtn.addEventListener("click", () => {
+      spoken = "";
+      loadQuestion();
+      speakBtn.style.display = "inline-block";
+      checkBtn.style.display = "inline-block";
+      repeatBtn.style.display = "inline-block";
+    });
+
+
+ // Add question manually
+    function addManualQuestion() {
+      const newQuestion = document.getElementById("newQuestion").value;
+      const newAnswer = document.getElementById("newAnswer").value;
+
+      if(newQuestion && newAnswer ){
+      questions.push({ question: newQuestion, answer: newAnswer, disabled: false });
+      document.getElementById("newQuestion").value = "";
+      document.getElementById("newAnswer").value = "";
+      updateQuestionList();
+      }else{
+        swal("Ingresar datos","Ingresa la pregunta/respuesta a agregar", "warning");
+      }
+    }
+
+    // Upload questions from Excel
+    function uploadExcelFile() {
+      const file = document.getElementById("uploadFile").files[0];
+      if (file && file.name.endsWith(".xlsx")) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const data = e.target.result;
+          const workbook = XLSX.read(data, { type: 'binary' });
+          const sheet = workbook.Sheets[workbook.SheetNames[0]];
+          const questionsFromFile = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+          // Validate format (Question in column 1, Answer in column 2)
+          if (questionsFromFile[0] && questionsFromFile[0].length === 2) {
+            questionsFromFile.forEach(row => {
+              const question = row[0];
+              const answer = row[1];
+              questions.push({ question: question, answer: answer, disabled: false });
+            });
+            updateQuestionList();
+          } else {
+            alert("Please follow the correct format: Question in Column 1, Answer in Column 2");
+          }
+        };
+        reader.readAsBinaryString(file);
+      } else {
+        alert("Please upload a valid Excel file.");
+      }
+    }
+
+    // Show the selected option (manual or excel)
+            function showOption(option) {
+            if (option === "manual") {
+                document.getElementById("manualOption").style.display = "block";
+                document.getElementById("excelOption").style.display = "none";
+                document.getElementById("myQuestions").style.display = "none";
+
+            } else if (option === "excel") {
+                document.getElementById("excelOption").style.display = "block";
+                document.getElementById("manualOption").style.display = "none";
+                document.getElementById("myQuestions").style.display = "none";
+
+            } else if (option === "questions") {
+                // updateQuestionList();
+
+                console.log("si entro");
+                 updateQuestionList();
+                document.getElementById("myQuestions").style.display = "block";
+                document.getElementById("manualOption").style.display = "none";
+                document.getElementById("excelOption").style.display = "none";
+            }
+            }
+     // Update the list of questions
+    function updateQuestionList() {
+      const listEl = document.getElementById("uploadedQuestionsList");
+      listEl.innerHTML = "";
+      questions.forEach((q, idx) => {
+        const questionEl = document.createElement("div");
+        questionEl.classList.add("question-item");
+        questionEl.innerHTML = `<input type="checkbox" ${q.disabled ? "checked disabled" : ""} onclick="toggleDisableQuestion(${idx})"> ${q.question} - ${q.answer}`;
+        listEl.appendChild(questionEl);
+      });
+    }
+
+    
+    // Toggle disable status of questions
+    function toggleDisableQuestion(idx) {
+      questions[idx].disabled = !questions[idx].disabled;
+      updateQuestionList();
+    }
+
+
+
+
+
+
+
+    window.onload = loadQuestion;
+  </script>
+  <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
+
+</body>
+</html>

@@ -256,33 +256,40 @@
 
   <script>
     // Tab switching functionality
-    function showTab(tabName) {
-      // Hide all content
-      const allTabs = document.querySelectorAll('.tab-content');
-      allTabs.forEach(tab => tab.style.display = 'none');
-      
-      // Remove active-tab class from all tabs
-      const allTabLinks = document.querySelectorAll('.tab');
-      allTabLinks.forEach(tab => tab.classList.remove('active-tab'));
+  function showTab(tabName) {
+    const allTabs = document.querySelectorAll('.tab-content');
+    allTabs.forEach(tab => tab.style.display = 'none');
 
-      // Show the selected tab and add active-tab class
-      document.getElementById(tabName).style.display = 'block';
-      document.querySelector(`.tab[onclick="showTab('${tabName}')"]`).classList.add('active-tab');
-    }
+    const allTabLinks = document.querySelectorAll('.tab');
+    allTabLinks.forEach(tab => tab.classList.remove('active-tab'));
+
+    document.getElementById(tabName).style.display = 'block';
+    document.querySelector(`.tab[onclick="showTab('${tabName}')"]`).classList.add('active-tab');
+  }
 
     // Initial display of Practice tab
     showTab('practice');
 
-    const questions = [
-           {
-  question: "What day is today?",
-  answer: (() => {
-    const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-    const today = new Date();
-    return days[today.getDay()];
-  })() // <-- Ejecuta la función inmediatamente y guarda el string
-}    ];
+  // Guardar y cargar preguntas en localStorage
+  const defaultQuestions = [
+    {
+      question: "What day is today?",
+      answer: (() => {
+        const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+        const today = new Date();
+        return days[today.getDay()];
+      })()
+    }
+  ];
 
+
+  // Inicializar localStorage si no existe
+  if (!localStorage.getItem("questions")) {
+    localStorage.setItem("questions", JSON.stringify(defaultQuestions));
+  }
+
+  // Obtener preguntas del localStorage
+  const questions = JSON.parse(localStorage.getItem("questions"));
     let current = {};
     let spoken = "";
 
@@ -389,49 +396,58 @@ recognition.onend = function () {
     });
 
 
- // Add question manually
-    function addManualQuestion() {
-      const newQuestion = document.getElementById("newQuestion").value;
-      const newAnswer = document.getElementById("newAnswer").value;
+// Add question manually
+function addManualQuestion() {
+  const newQuestion = document.getElementById("newQuestion").value;
+  const newAnswer = document.getElementById("newAnswer").value;
 
-      if(newQuestion && newAnswer ){
-      questions.push({ question: newQuestion, answer: newAnswer, disabled: false });
-      document.getElementById("newQuestion").value = "";
-      document.getElementById("newAnswer").value = "";
-      updateQuestionList();
-      }else{
-        swal("Ingresar datos","Ingresa la pregunta/respuesta a agregar", "warning");
-      }
-    }
+  if (newQuestion && newAnswer) {
+    questions.push({ question: newQuestion, answer: newAnswer, disabled: false });
 
-    // Upload questions from Excel
-    function uploadExcelFile() {
-      const file = document.getElementById("uploadFile").files[0];
-      if (file && file.name.endsWith(".xlsx")) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const data = e.target.result;
-          const workbook = XLSX.read(data, { type: 'binary' });
-          const sheet = workbook.Sheets[workbook.SheetNames[0]];
-          const questionsFromFile = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+    // Guardar en localStorage después de agregar
+    localStorage.setItem("questions", JSON.stringify(questions));
 
-          // Validate format (Question in column 1, Answer in column 2)
-          if (questionsFromFile[0] && questionsFromFile[0].length === 2) {
-            questionsFromFile.forEach(row => {
-              const question = row[0];
-              const answer = row[1];
-              questions.push({ question: question, answer: answer, disabled: false });
-            });
-            updateQuestionList();
-          } else {
-            alert("Please follow the correct format: Question in Column 1, Answer in Column 2");
-          }
-        };
-        reader.readAsBinaryString(file);
+    document.getElementById("newQuestion").value = "";
+    document.getElementById("newAnswer").value = "";
+    updateQuestionList();
+  } else {
+    swal("Ingresar datos", "Ingresa la pregunta/respuesta a agregar", "warning");
+  }
+}
+
+
+// Upload questions from Excel
+function uploadExcelFile() {
+  const file = document.getElementById("uploadFile").files[0];
+  if (file && file.name.endsWith(".xlsx")) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      const data = e.target.result;
+      const workbook = XLSX.read(data, { type: 'binary' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const questionsFromFile = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+      // Validate format (Question in column 1, Answer in column 2)
+      if (questionsFromFile[0] && questionsFromFile[0].length === 2) {
+        questionsFromFile.forEach(row => {
+          const question = row[0];
+          const answer = row[1];
+          questions.push({ question: question, answer: answer, disabled: false });
+        });
+
+        // Guardar en localStorage después de agregar desde Excel
+        localStorage.setItem("questions", JSON.stringify(questions));
+
+        updateQuestionList();
       } else {
-        alert("Please upload a valid Excel file.");
+        alert("Please follow the correct format: Question in Column 1, Answer in Column 2");
       }
-    }
+    };
+    reader.readAsBinaryString(file);
+  } else {
+    alert("Please upload a valid Excel file.");
+  }
+}
 
     // Show the selected option (manual or excel)
             function showOption(option) {
